@@ -1,26 +1,111 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --bg: #faf5ec;
+  --surface: #ffffff;
+  --surface-2: #f1e9da;
+  --ink: #2b2622;
+  --muted: #7a6f66;
+  --line: #e4d9c6;
+  --accent: #d9734a;
+  --accent-ink: #ffffff;
+  --sage: #6f9a7b;
+  --rose: #d96a84;
+  --sky: #5b8fc7;
+  --board-light: #f6e7c8;
+  --board-dark: #b98a5a;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #1b1815;
+    --surface: #26221e;
+    --surface-2: #322c26;
+    --ink: #f2ebe0;
+    --muted: #a99c8f;
+    --line: #3d3630;
+    --accent: #e6855c;
+    --board-light: #d9c39a;
+    --board-dark: #8c6239;
   }
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-sage: var(--sage);
+  --color-rose: var(--rose);
+  --color-sky: var(--sky);
+  --color-board-light: var(--board-light);
+  --color-board-dark: var(--board-dark);
+  --font-sans: var(--font-nunito), ui-rounded, system-ui, sans-serif;
+}
+
+html {
+  height: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.board {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.tap {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.pop {
+  animation: pop 180ms ease-out;
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.pulse-soft {
+  animation: pulse-soft 1.6s ease-in-out infinite;
 }
