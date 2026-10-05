@@ -117,3 +117,19 @@ body {
 .pulse-soft {
   animation: pulse-soft 1.6s ease-in-out infinite;
 }
+
+.chess-piece {
+  font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2", "DejaVu Sans", sans-serif;
+}
+
+.chess-white {
+  color: #fbf6ee;
+  -webkit-text-stroke: 1.2px #2b2622;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+}
+
+.chess-black {
+  color: #241f1b;
+  -webkit-text-stroke: 1px #f2ebe0;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+}

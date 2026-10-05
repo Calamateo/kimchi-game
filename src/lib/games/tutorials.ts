@@ -2,6 +2,15 @@ import type { GameType } from "@/lib/db";
 import { checkers, isKing, parseBoard, type CheckersMove, type CheckersState } from "./checkers/engine";
 import { connect4, type C4Move, type C4State } from "./connect4/engine";
 import { CORNERS, reversi, type ReversiMove, type ReversiState } from "./reversi/engine";
+import { Chess } from "chess.js";
+import {
+  chess,
+  isInCheck,
+  load,
+  registerLesson,
+  type ChessMove,
+  type ChessState,
+} from "./chess/engine";
 
 /**
  * Tutoriales interactivos. Quien aprende siempre juega con el lado A y
@@ -233,10 +242,85 @@ const reversiTutorial: Tutorial<ReversiState, ReversiMove> = {
   outro: "Listo. Recuerda: al final gana quien tenga más fichas, así que las esquinas y los bordes son tus aliados.",
 };
 
+/** Posición de ajedrez a partir de un FEN, con las blancas para A. */
+const ch = (fen: string): ChessState => {
+  const base = chess.initialState("A", { variant: "full" });
+  const c = new Chess(fen);
+  // Guardamos el FEN como "variante" ad hoc reconstruible: usamos la lista de
+  // jugadas vacía y el FEN directo; el motor reconstruye desde VARIANTS, así
+  // que registramos esta posición como variante temporal.
+  return { ...base, fen: c.fen(), moves: [], variant: registerLesson(fen) };
+};
+
+const pieceMoved = (m: ChessMove, before: ChessState, type: string, nice: string) => {
+  const p = load(before).get(m.from);
+  return p?.type === type ? null : `Esta vez mueve ${nice}.`;
+};
+
+const chessTutorial: Tutorial<ChessState, ChessMove> = {
+  game: "chess",
+  intro:
+    "El ajedrez tiene seis piezas distintas y cada una se mueve a su manera. Vamos una por una, con calma. Tú llevas las blancas.",
+  steps: [
+    {
+      title: "El peón",
+      text: "El peón avanza de frente: una casilla, o dos si todavía no se ha movido. Toca el peón blanco y avánzalo.",
+      state: ch("4k3/8/8/8/8/8/4P3/4K3 w - - 0 1"),
+      check: (m, b) => pieceMoved(m, b, "p", "el peón"),
+      success: "Así avanza el peón. Ojo: captura en diagonal, no de frente.",
+    },
+    {
+      title: "La torre",
+      text: "La torre se mueve en línea recta, horizontal o vertical, tantas casillas como quiera. Mueve la torre.",
+      state: ch("4k3/8/8/8/8/8/8/R3K3 w - - 0 1"),
+      check: (m, b) => pieceMoved(m, b, "r", "la torre"),
+      success: "Recta y poderosa. Dos torres juntas son un equipo temible.",
+    },
+    {
+      title: "El alfil",
+      text: "El alfil se mueve en diagonal. Siempre se queda en casillas del mismo color. Mueve el alfil.",
+      state: ch("4k3/8/8/8/8/8/8/2B1K3 w - - 0 1"),
+      check: (m, b) => pieceMoved(m, b, "b", "el alfil"),
+      success: "Diagonal pura. Fíjate: ese alfil solo pisará casillas oscuras toda la partida.",
+    },
+    {
+      title: "El caballo",
+      text: "El caballo salta en forma de L: dos casillas en una dirección y una hacia el lado. Es la única pieza que puede saltar por encima de otras. Mueve el caballo.",
+      state: ch("4k3/8/8/8/8/8/3PPP2/4KN2 w - - 0 1"),
+      check: (m, b) => pieceMoved(m, b, "n", "el caballo"),
+      success: "¡Saltó por encima de tus peones! El caballo es travieso: sus ataques sorprenden.",
+    },
+    {
+      title: "La dama",
+      text: "La dama combina torre y alfil: recta o diagonal, tantas casillas como quiera. Es la pieza más valiosa después del rey. Mueve la dama.",
+      state: ch("4k3/8/8/8/8/8/8/3QK3 w - - 0 1"),
+      check: (m, b) => pieceMoved(m, b, "q", "la dama"),
+      success: "Cuídala mucho: perder la dama suele decidir la partida.",
+    },
+    {
+      title: "Jaque",
+      text: "Jaque es amenazar al rey contrario. Mueve tu torre a una casilla desde donde ataque al rey negro.",
+      state: ch("4k3/8/8/8/8/8/8/R3K3 w - - 0 1"),
+      check: (_m, _b, after) => (isInCheck(after) ? null : "Esa jugada no amenaza al rey. Prueba poner la torre en la misma fila o columna que el rey negro."),
+      success: "¡Jaque! Tu pareja ahora está obligada a proteger su rey antes de hacer cualquier otra cosa.",
+    },
+    {
+      title: "Jaque mate",
+      text: "Jaque mate es un jaque sin escape. El rey negro está encerrado por sus propios peones. Encuentra la jugada de torre que lo deja sin salida.",
+      state: ch("7k/6pp/8/8/8/8/8/R3K3 w - - 0 1"),
+      check: (_m, _b, after) => (load(after).isCheckmate() ? null : "Todavía no es mate. Busca la fila donde el rey no tiene a dónde ir."),
+      success: "¡Jaque mate! Así se gana una partida de ajedrez.",
+    },
+  ],
+  outro:
+    "Ya conoces cómo se mueve todo. Para empezar a jugar te recomendamos la lección 'Peones y reyes' y subir poco a poco hasta el ajedrez completo. Y siempre tienes el botón de Pista.",
+};
+
 export const TUTORIALS: Partial<Record<GameType, Tutorial>> = {
   checkers: checkersTutorial as Tutorial,
   connect4: connect4Tutorial as Tutorial,
   reversi: reversiTutorial as Tutorial,
+  chess: chessTutorial as Tutorial,
 };
 
 export { checkers, isKing };

@@ -18,7 +18,10 @@ export interface Suggestion<M> {
  */
 export interface GameEngine<S, M> {
   id: GameType;
-  initialState(first: Player): S;
+  /** `options` permite variantes (por ejemplo, las lecciones de ajedrez). */
+  initialState(first: Player, options?: unknown): S;
+  /** Opciones con las que recrear una partida igual (revancha). */
+  rematchOptions?(state: S): unknown;
   currentPlayer(state: S): Player;
   legalMoves(state: S): M[];
   isLegal(state: S, move: M): boolean;

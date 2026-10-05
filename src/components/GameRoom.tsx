@@ -242,7 +242,10 @@ export function GameRoom({ initialGame, userId, profiles }: Props) {
   async function rematch() {
     setBusy(true);
     const first = game.first_player === userId ? partnerId : userId;
-    const state = engine.initialState(first === userId ? "A" : "B");
+    const state = engine.initialState(
+      first === userId ? "A" : "B",
+      engine.rematchOptions?.(game.state),
+    );
     const { data, error } = await supabase
       .from("games")
       .insert({
@@ -361,7 +364,8 @@ export function GameRoom({ initialGame, userId, profiles }: Props) {
 
         <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm font-semibold text-muted">
           <span>
-            Tú juegas con <span className="text-ink">{meta.sideName(mySide)}</span>
+            {meta.label?.(game.state) ? `${meta.label(game.state)} · ` : ""}
+            Tú juegas con <span className="text-ink">{meta.sideName(mySide, game.state)}</span>
           </span>
           <Score game={game} mySide={mySide} myName={myName} partnerName={partnerName} />
         </div>

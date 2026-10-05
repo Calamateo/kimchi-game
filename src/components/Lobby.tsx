@@ -21,6 +21,7 @@ export function Lobby({ userId, profiles, initialGames }: Props) {
   const supabase = useMemo(() => createClient(), []);
   const [games, setGames] = useState<GameRow[]>(initialGames);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [variantsFor, setVariantsFor] = useState<GameType | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -83,14 +84,18 @@ export function Lobby({ userId, profiles, initialGames }: Props) {
     setTimeout(() => setToast(null), 2800);
   }
 
-  async function createGame(type: GameType) {
+  async function createGame(type: GameType, options?: unknown) {
     const meta = GAMES[type];
     if (!meta.available || !meta.engine || !partner) return;
+    if (meta.variants && !options) {
+      setVariantsFor(type);
+      return;
+    }
     setCreating(true);
     // Alterna quién empieza respecto a la partida más reciente.
     const last = games[0];
     const first = last ? (last.first_player === userId ? partner.id : userId) : userId;
-    const state = meta.engine.initialState(first === userId ? "A" : "B");
+    const state = meta.engine.initialState(first === userId ? "A" : "B", options);
     const { data, error } = await supabase
       .from("games")
       .insert({
@@ -110,6 +115,7 @@ export function Lobby({ userId, profiles, initialGames }: Props) {
       return;
     }
     setSheetOpen(false);
+    setVariantsFor(null);
     router.push(`/partida/${data.id}`);
   }
 
@@ -207,7 +213,34 @@ export function Lobby({ userId, profiles, initialGames }: Props) {
         </Button>
       </div>
 
-      <Sheet open={sheetOpen} onClose={() => setSheetOpen(false)} title="¿Qué jugamos?">
+      <Sheet
+        open={sheetOpen && !!variantsFor}
+        onClose={() => setVariantsFor(null)}
+        title={variantsFor ? `${GAMES[variantsFor].name}: ¿qué lección?` : ""}
+      >
+        <ul className="flex flex-col gap-2">
+          {variantsFor &&
+            GAMES[variantsFor].variants?.map((v, i) => (
+              <li key={v.id}>
+                <button
+                  disabled={creating}
+                  onClick={() => createGame(variantsFor, { variant: v.id })}
+                  className="tap flex w-full items-center gap-4 rounded-2xl bg-surface-2 p-4 text-left disabled:opacity-50"
+                >
+                  <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-accent font-extrabold text-accent-ink">
+                    {i + 1}
+                  </span>
+                  <span className="flex-1">
+                    <span className="block text-lg font-extrabold">{v.name}</span>
+                    <span className="block text-sm text-muted">{v.description}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
+        </ul>
+      </Sheet>
+
+      <Sheet open={sheetOpen && !variantsFor} onClose={() => setSheetOpen(false)} title="¿Qué jugamos?">
         <ul className="flex flex-col gap-2">
           {GAME_ORDER.map((id) => {
             const g = GAMES[id];
@@ -324,6 +357,9 @@ function GameItem({
           <span className="block text-lg font-extrabold">
             {meta.name} con {nameOf(opponentOf(game, userId))}
           </span>
+          {meta.label?.(game.state) && (
+            <span className="block text-xs font-bold text-accent">{meta.label(game.state)}</span>
+          )}
           <span className="block text-sm text-muted">
             {detail} · {timeAgo(game.updated_at)}
           </span>
