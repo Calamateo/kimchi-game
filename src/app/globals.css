@@ -14,6 +14,9 @@
   --sky: #5b8fc7;
   --board-light: #f6e7c8;
   --board-dark: #b98a5a;
+  --piece-a: #c9503c;
+  --piece-b: #2b2622;
+  --piece-b-ink: #f2ebe0;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -44,6 +47,9 @@
   --color-sky: var(--sky);
   --color-board-light: var(--board-light);
   --color-board-dark: var(--board-dark);
+  --color-piece-a: var(--piece-a);
+  --color-piece-b: var(--piece-b);
+  --color-piece-b-ink: var(--piece-b-ink);
   --font-sans: var(--font-nunito), ui-rounded, system-ui, sans-serif;
 }
 

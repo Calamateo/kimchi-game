@@ -13,6 +13,8 @@ import {
 } from "@/lib/db";
 import { GAMES } from "@/lib/games/registry";
 import { TicTacToeBoard } from "./games/TicTacToeBoard";
+import { CheckersBoard } from "./games/CheckersBoard";
+import { countPieces, type CheckersState } from "@/lib/games/checkers/engine";
 import { Button, Dot, Sheet, Toast } from "./ui";
 
 interface Props {
@@ -255,13 +257,33 @@ export function GameRoom({ initialGame, userId, profiles }: Props) {
               onMove={onMove}
             />
           )}
+          {game.type === "checkers" && (
+            <CheckersBoard
+              state={game.state as CheckersState}
+              mySide={mySide}
+              canPlay={isMyTurn && !busy}
+              onMove={onMove}
+              explain={showToast}
+              partnerName={partnerName}
+            />
+          )}
         </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-sm font-semibold text-muted">
-          <span>
-            {meta.name} · Tú juegas con{" "}
-            <span className="text-ink">{mySide === "A" ? "✕" : "◯"}</span>
-          </span>
+          {game.type === "tictactoe" && (
+            <span>
+              {meta.name} · Tú juegas con{" "}
+              <span className="text-ink">{mySide === "A" ? "✕" : "◯"}</span>
+            </span>
+          )}
+          {game.type === "checkers" && (
+            <CheckersScore
+              state={game.state as CheckersState}
+              mySide={mySide}
+              myName={myName}
+              partnerName={partnerName}
+            />
+          )}
         </div>
 
         <div className="mt-4 flex flex-wrap justify-center gap-2">
@@ -292,10 +314,45 @@ export function GameRoom({ initialGame, userId, profiles }: Props) {
           ))}
         </ol>
         <p className="mt-4 text-sm text-muted">
-          Consejo: toca una casilla vacía cuando sea tu turno. Si no se puede, te
-          explicamos por qué.
+          Consejo: toca una pieza y luego la casilla a donde quieres ir. Si no se
+          puede, te explicamos por qué.
         </p>
       </Sheet>
     </main>
+  );
+}
+
+function CheckersScore({
+  state,
+  mySide,
+  myName,
+  partnerName,
+}: {
+  state: CheckersState;
+  mySide: "A" | "B";
+  myName: string;
+  partnerName: string;
+}) {
+  const mine = countPieces(state.board, mySide);
+  const theirs = countPieces(state.board, mySide === "A" ? "B" : "A");
+  return (
+    <div className="flex items-center gap-4">
+      <span className="flex items-center gap-1.5">
+        <span
+          className={`inline-block h-4 w-4 rounded-full ${
+            mySide === "A" ? "bg-piece-a" : "bg-piece-b"
+          }`}
+        />
+        {myName}: <span className="text-ink">{mine}</span>
+      </span>
+      <span className="flex items-center gap-1.5">
+        <span
+          className={`inline-block h-4 w-4 rounded-full ${
+            mySide === "A" ? "bg-piece-b" : "bg-piece-a"
+          }`}
+        />
+        {partnerName}: <span className="text-ink">{theirs}</span>
+      </span>
+    </div>
   );
 }

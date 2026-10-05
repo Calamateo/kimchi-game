@@ -1,6 +1,7 @@
 import type { GameType } from "@/lib/db";
 import type { GameEngine } from "./types";
 import { tictactoe } from "./tictactoe/engine";
+import { checkers } from "./checkers/engine";
 
 export interface GameMeta {
   id: GameType;
@@ -33,7 +34,7 @@ export const GAMES: Record<GameType, GameMeta> = {
     id: "connect4",
     name: "Conecta 4",
     tagline: "Deja caer fichas y forma cuatro en línea.",
-    emoji: "🔴",
+    emoji: "🟡",
     available: false,
     engine: null,
     rules: [],
@@ -42,10 +43,17 @@ export const GAMES: Record<GameType, GameMeta> = {
     id: "checkers",
     name: "Damas",
     tagline: "Avanza en diagonal y captura saltando.",
-    emoji: "⚪",
-    available: false,
-    engine: null,
-    rules: [],
+    emoji: "🔴",
+    available: true,
+    engine: checkers,
+    rules: [
+      "Cada quien tiene 12 piezas en las casillas oscuras. Las tuyas empiezan abajo.",
+      "Las piezas avanzan una casilla en diagonal, siempre hacia adelante.",
+      "Para capturar, saltas por encima de una pieza de tu pareja y caes en la casilla vacía que sigue. Esa pieza sale del tablero.",
+      "Si puedes capturar, es obligatorio. Si después del salto puedes seguir saltando, tienes que continuar.",
+      "Cuando una pieza llega al otro extremo del tablero se convierte en dama (lleva corona): se mueve y captura también hacia atrás.",
+      "Gana quien deja a su pareja sin piezas o sin movimientos posibles.",
+    ],
   },
   reversi: {
     id: "reversi",
