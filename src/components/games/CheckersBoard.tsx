@@ -24,6 +24,8 @@ interface Props {
   partnerName: string;
   /** Si está activado, muestra la línea de ayuda bajo el tablero. */
   guide?: boolean;
+  /** Jugada sugerida a resaltar. */
+  hint?: CheckersMove | null;
 }
 
 export function CheckersBoard({
@@ -34,6 +36,7 @@ export function CheckersBoard({
   explain,
   partnerName,
   guide = true,
+  hint = null,
 }: Props) {
   // La selección va ligada al estado para el que se hizo: si llega una jugada
   // nueva (propia o ajena), la selección anterior deja de aplicar sola.
@@ -57,6 +60,8 @@ export function CheckersBoard({
   );
   const lastPath = new Set(state.last?.path ?? []);
   const lastCaptured = new Set(state.last?.captured ?? []);
+  const hintFrom = hint?.path[0] ?? null;
+  const hintTo = hint ? hint.path[hint.path.length - 1] : null;
 
   function tap(i: number) {
     const piece = state.board[i];
@@ -141,6 +146,8 @@ export function CheckersBoard({
             const isMovable = path.length === 0 && movable.has(i);
             const inLast = lastPath.has(i);
             const wasCaptured = lastCaptured.has(i);
+            const isHintFrom = hintFrom === i;
+            const isHintTo = hintTo === i;
 
             if (!dark) {
               return (
@@ -157,8 +164,12 @@ export function CheckersBoard({
                 className={`tap relative flex items-center justify-center
                   ${inLast && !piece ? "bg-board-dark brightness-110" : "bg-board-dark"}
                   ${isSelected ? "ring-inset ring-4 ring-accent" : ""}
-                  ${isTarget ? "ring-inset ring-4 ring-sage" : ""}`}
+                  ${isTarget ? "ring-inset ring-4 ring-sage" : ""}
+                  ${isHintFrom || isHintTo ? "pulse-soft ring-inset ring-4 ring-sky" : ""}`}
               >
+                {isHintTo && !piece && (
+                  <span className="absolute h-1/3 w-1/3 rounded-full bg-sky/80" />
+                )}
                 {wasCaptured && !piece && (
                   <span className="absolute h-1/3 w-1/3 rounded-full border-2 border-dashed border-rose/60" />
                 )}

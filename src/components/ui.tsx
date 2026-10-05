@@ -97,6 +97,44 @@ export function Toast({ message }: { message: string | null }) {
   );
 }
 
+export function Toggle({
+  checked,
+  onChange,
+  label,
+  description,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label: string;
+  description?: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className="tap flex w-full items-center gap-4 rounded-2xl bg-surface-2 p-4 text-left"
+    >
+      <span className="flex-1">
+        <span className="block font-extrabold">{label}</span>
+        {description && <span className="block text-sm text-muted">{description}</span>}
+      </span>
+      <span
+        className={`relative inline-block h-8 w-14 flex-none rounded-full transition ${
+          checked ? "bg-sage" : "bg-line"
+        }`}
+      >
+        <span
+          className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow transition ${
+            checked ? "left-7" : "left-1"
+          }`}
+        />
+      </span>
+    </button>
+  );
+}
+
 export function Dot({ online }: { online: boolean }) {
   return (
     <span

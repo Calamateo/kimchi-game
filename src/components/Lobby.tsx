@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { opponentOf, type GameRow, type GameType, type ProfileRow } from "@/lib/db";
 import { GAMES, GAME_ORDER } from "@/lib/games/registry";
+import { TUTORIALS } from "@/lib/games/tutorials";
 import { timeAgo } from "@/lib/time";
-import { Button, Card, Dot, Sheet, Toast } from "./ui";
+import { Button, Card, Dot, Sheet, Toast, Toggle } from "./ui";
 
 interface Props {
   userId: string;
@@ -20,12 +21,17 @@ export function Lobby({ userId, profiles, initialGames }: Props) {
   const supabase = useMemo(() => createClient(), []);
   const [games, setGames] = useState<GameRow[]>(initialGames);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [partnerOnline, setPartnerOnline] = useState(false);
 
   const me = profiles.find((p) => p.id === userId);
   const partner = profiles.find((p) => p.id !== userId);
+  const [settings, setSettings] = useState({
+    guide_mode: me?.settings?.guide_mode ?? true,
+    show_hints: me?.settings?.show_hints ?? true,
+  });
   const nameOf = useCallback(
     (id: string | null) => profiles.find((p) => p.id === id)?.display_name ?? "…",
     [profiles],
@@ -43,11 +49,7 @@ export function Lobby({ userId, profiles, initialGames }: Props) {
   useEffect(() => {
     const channel = supabase
       .channel("lobby")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "games" },
-        () => void refetch(),
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "games" }, () => void refetch())
       .subscribe();
 
     const presence = supabase.channel("presence:lobby", {
@@ -87,8 +89,7 @@ export function Lobby({ userId, profiles, initialGames }: Props) {
     setCreating(true);
     // Alterna quién empieza respecto a la partida más reciente.
     const last = games[0];
-    const first =
-      last ? (last.first_player === userId ? partner.id : userId) : userId;
+    const first = last ? (last.first_player === userId ? partner.id : userId) : userId;
     const state = meta.engine.initialState(first === userId ? "A" : "B");
     const { data, error } = await supabase
       .from("games")
@@ -112,6 +113,16 @@ export function Lobby({ userId, profiles, initialGames }: Props) {
     router.push(`/partida/${data.id}`);
   }
 
+  async function saveSettings(next: typeof settings) {
+    setSettings(next);
+    const { error } = await supabase
+      .from("profiles")
+      .update({ settings: next })
+      .eq("id", userId);
+    if (error) showToast("No se pudieron guardar los ajustes.");
+    else router.refresh();
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
     router.replace("/login");
@@ -122,6 +133,7 @@ export function Lobby({ userId, profiles, initialGames }: Props) {
   const myTurn = active.filter((g) => g.turn === userId);
   const theirTurn = active.filter((g) => g.turn !== userId);
   const finished = games.filter((g) => g.status !== "active").slice(0, 10);
+  const learnable = GAME_ORDER.filter((t) => TUTORIALS[t]);
 
   return (
     <main className="safe-top safe-bottom mx-auto flex w-full max-w-lg flex-1 flex-col gap-6 px-4 pb-28 pt-6">
@@ -130,11 +142,9 @@ export function Lobby({ userId, profiles, initialGames }: Props) {
       <header className="flex items-center justify-between">
         <div>
           <p className="text-sm font-semibold text-muted">Hola,</p>
-          <h1 className="text-3xl font-extrabold leading-tight">
-            {me?.display_name ?? "…"}
-          </h1>
+          <h1 className="text-3xl font-extrabold leading-tight">{me?.display_name ?? "…"}</h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {partner && (
             <div className="flex items-center gap-2 rounded-full bg-surface px-3 py-2 text-sm font-semibold ring-1 ring-line">
               <Dot online={partnerOnline} />
@@ -142,10 +152,11 @@ export function Lobby({ userId, profiles, initialGames }: Props) {
             </div>
           )}
           <button
-            onClick={signOut}
-            className="tap rounded-full bg-surface px-3 py-2 text-sm font-semibold text-muted ring-1 ring-line"
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Ajustes"
+            className="tap flex h-10 w-10 items-center justify-center rounded-full bg-surface text-lg ring-1 ring-line"
           >
-            Salir
+            ⚙️
           </button>
         </div>
       </header>
@@ -161,6 +172,28 @@ export function Lobby({ userId, profiles, initialGames }: Props) {
       >
         {(g) => <GameItem game={g} nameOf={nameOf} userId={userId} />}
       </Section>
+
+      <section>
+        <h2 className="mb-2 px-1 text-sm font-extrabold uppercase tracking-wide text-muted">
+          Aprender
+        </h2>
+        <ul className="flex gap-2 overflow-x-auto pb-1">
+          {learnable.map((t) => (
+            <li key={t} className="flex-none">
+              <Link
+                href={`/tutorial/${t}`}
+                className="tap flex min-w-36 flex-col items-start gap-1 rounded-3xl bg-surface p-4 ring-1 ring-line"
+              >
+                <span className="text-2xl">{GAMES[t].emoji}</span>
+                <span className="font-extrabold">{GAMES[t].name}</span>
+                <span className="text-xs text-muted">
+                  {TUTORIALS[t]!.steps.length} pasos · 3 min
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       {finished.length > 0 && (
         <Section title="Terminadas" empty="" games={finished}>
@@ -200,6 +233,33 @@ export function Lobby({ userId, profiles, initialGames }: Props) {
             );
           })}
         </ul>
+      </Sheet>
+
+      <Sheet open={settingsOpen} onClose={() => setSettingsOpen(false)} title="Ajustes">
+        <div className="flex flex-col gap-2">
+          <Toggle
+            checked={settings.guide_mode}
+            onChange={(v) => saveSettings({ ...settings, guide_mode: v })}
+            label="Modo guía"
+            description="Resalta las jugadas posibles y muestra consejos bajo el tablero."
+          />
+          <Toggle
+            checked={settings.show_hints}
+            onChange={(v) => saveSettings({ ...settings, show_hints: v })}
+            label="Botón de pista"
+            description="Permite pedir una sugerencia de jugada cuando sea tu turno."
+          />
+          <p className="px-1 pt-2 text-xs text-muted">
+            Estos ajustes son solo tuyos. {partner?.display_name ?? "Tu pareja"} tiene los
+            suyos.
+          </p>
+          <button
+            onClick={signOut}
+            className="tap mt-3 min-h-12 rounded-2xl bg-rose/10 font-bold text-rose"
+          >
+            Cerrar sesión
+          </button>
+        </div>
       </Sheet>
     </main>
   );
@@ -258,11 +318,7 @@ function GameItem({
   }
   return (
     <Link href={`/partida/${game.id}`} className="block">
-      <Card
-        className={`flex items-center gap-4 ${
-          highlight ? "ring-2 ring-accent" : ""
-        }`}
-      >
+      <Card className={`flex items-center gap-4 ${highlight ? "ring-2 ring-accent" : ""}`}>
         <span className="text-3xl">{meta.emoji}</span>
         <span className="flex-1">
           <span className="block text-lg font-extrabold">

@@ -17,6 +17,7 @@
   --piece-a: #c9503c;
   --piece-b: #2b2622;
   --piece-b-ink: #f2ebe0;
+  --c4-b: #e9b949;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -50,6 +51,7 @@
   --color-piece-a: var(--piece-a);
   --color-piece-b: var(--piece-b);
   --color-piece-b-ink: var(--piece-b-ink);
+  --color-c4-b: var(--c4-b);
   --font-sans: var(--font-nunito), ui-rounded, system-ui, sans-serif;
 }
 

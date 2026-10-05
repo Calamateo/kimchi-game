@@ -84,4 +84,29 @@ export const tictactoe: GameEngine<TttState, TttMove> = {
     }
     return "No se puede hacer esa jugada.";
   },
+
+  suggest(state) {
+    const moves = this.legalMoves(state);
+    if (moves.length === 0) return null;
+    const me = state.current;
+    for (const m of moves) {
+      if (status(this.applyMove(state, m)).kind === "win") {
+        return { move: m, reason: "¡Con esa casilla haces tres en línea!" };
+      }
+    }
+    const theirs: TttState = { ...state, current: other(me) };
+    for (const m of moves) {
+      if (status(this.applyMove(theirs, m)).kind === "win") {
+        return { move: m, reason: "Tu pareja haría línea ahí. Hay que taparla." };
+      }
+    }
+    if (state.board[4] === null) {
+      return { move: { cell: 4 }, reason: "El centro participa en cuatro líneas: es la casilla más valiosa." };
+    }
+    const corner = [0, 2, 6, 8].find((c) => state.board[c] === null);
+    if (corner !== undefined) {
+      return { move: { cell: corner }, reason: "Las esquinas dan más oportunidades de hacer línea que los lados." };
+    }
+    return { move: moves[0], reason: "Cualquier casilla libre sirve; ya no hay peligro." };
+  },
 };

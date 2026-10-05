@@ -34,6 +34,15 @@ export interface GameRow {
   updated_at: string;
 }
 
+export interface UndoRequestRow {
+  id: string;
+  game_id: string;
+  requested_by: string;
+  status: "pending" | "accepted" | "rejected" | "cancelled";
+  created_at: string;
+  resolved_at: string | null;
+}
+
 export type Side = "A" | "B";
 
 export function sideOf(game: GameRow, userId: string): Side | null {

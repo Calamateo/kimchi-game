@@ -8,9 +8,10 @@ interface Props {
   mySide: Side;
   canPlay: boolean;
   onMove: (move: TttMove) => void;
+  hint?: TttMove | null;
 }
 
-export function TicTacToeBoard({ state, mySide, canPlay, onMove }: Props) {
+export function TicTacToeBoard({ state, mySide, canPlay, onMove, hint }: Props) {
   const line = winningLine(state.board);
 
   return (
@@ -23,6 +24,7 @@ export function TicTacToeBoard({ state, mySide, canPlay, onMove }: Props) {
         const inLine = line?.includes(i) ?? false;
         const empty = cell === null;
         const playable = canPlay && empty;
+        const isHint = hint?.cell === i && empty;
         return (
           <button
             key={i}
@@ -37,7 +39,8 @@ export function TicTacToeBoard({ state, mySide, canPlay, onMove }: Props) {
             className={`tap flex items-center justify-center rounded-2xl text-[min(18vw,6rem)] font-extrabold leading-none transition
               ${inLine ? "bg-sage/80" : "bg-board-light"}
               ${playable ? "active:scale-95 hover:brightness-95" : ""}
-              ${empty && canPlay ? "ring-2 ring-accent/40 ring-inset" : ""}`}
+              ${empty && canPlay && !isHint ? "ring-2 ring-accent/40 ring-inset" : ""}
+              ${isHint ? "pulse-soft ring-4 ring-sage ring-inset" : ""}`}
           >
             {cell && (
               <span
