@@ -361,7 +361,7 @@ function GameItem({
             <span className="block text-xs font-bold text-accent">{meta.label(game.state)}</span>
           )}
           <span className="block text-sm text-muted">
-            {detail} · {timeAgo(game.updated_at)}
+            {detail} · <span suppressHydrationWarning>{timeAgo(game.updated_at)}</span>
           </span>
         </span>
         <span className="text-muted">›</span>

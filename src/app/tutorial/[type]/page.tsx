@@ -25,11 +25,5 @@ export default async function TutorialPage({
     .eq("id", user.id)
     .maybeSingle();
 
-  return (
-    <Tutorial
-      type={type as GameType}
-      tutorial={tutorial}
-      learnerName={profile?.display_name ?? "tú"}
-    />
-  );
+  return <Tutorial type={type as GameType} learnerName={profile?.display_name ?? "tú"} />;
 }

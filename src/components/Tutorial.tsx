@@ -4,21 +4,25 @@ import { useState } from "react";
 import Link from "next/link";
 import type { GameType } from "@/lib/db";
 import { GAMES } from "@/lib/games/registry";
-import type { Tutorial as TutorialData } from "@/lib/games/tutorials";
+import { TUTORIALS } from "@/lib/games/tutorials";
 import { GameBoard } from "./games/GameBoard";
 import { Button, Toast } from "./ui";
 
 interface Props {
   type: GameType;
-  tutorial: TutorialData;
   learnerName: string;
 }
 
 type Phase = "intro" | "step" | "done-step" | "outro";
 
-export function Tutorial({ type, tutorial, learnerName }: Props) {
+/**
+ * El tutorial se busca aquí, en el cliente: los pasos contienen funciones
+ * (`check`) y no pueden viajar como props desde un Server Component.
+ */
+export function Tutorial({ type, learnerName }: Props) {
   const meta = GAMES[type];
   const engine = meta.engine!;
+  const tutorial = TUTORIALS[type]!;
   const [phase, setPhase] = useState<Phase>("intro");
   const [index, setIndex] = useState(0);
   const [board, setBoard] = useState<unknown>(tutorial.steps[0].state);
