@@ -168,8 +168,8 @@ const connect4Tutorial: Tutorial<C4State, C4Move> = {
     },
     {
       title: "Tapar a tu pareja",
-      text: "Ahora tu pareja tiene tres amarillas seguidas. Si no la tapas, gana en su turno. Pon tu ficha donde haría la cuarta.",
-      state: c4([6, 1, 6, 2, 5, 3]),
+      text: "Ahora tu pareja tiene tres amarillas seguidas pegadas al borde. Si no la tapas, gana en su turno. Pon tu ficha donde haría la cuarta.",
+      state: c4([6, 0, 6, 1, 5, 2]),
       check: (_m, _b, after) => {
         const theirs: C4State = { ...after, current: "B" };
         const canWin = connect4
@@ -207,13 +207,13 @@ const reversiTutorial: Tutorial<ReversiState, ReversiMove> = {
     },
     {
       title: "Varias direcciones a la vez",
-      text: "Una sola ficha puede voltear en varias líneas al mismo tiempo. Busca la casilla que voltea más de una ficha.",
+      text: "Una sola ficha puede voltear en varias líneas al mismo tiempo. Busca la casilla que voltea las dos fichas blancas de un solo golpe.",
       state: rv(`
         ........
+        .A...A..
+        ..B.B...
         ........
-        ...B....
-        ..BAB...
-        ...B....
+        ........
         ........
         ........
         ........
@@ -279,7 +279,7 @@ const chessTutorial: Tutorial<ChessState, ChessMove> = {
     {
       title: "El alfil",
       text: "El alfil se mueve en diagonal. Siempre se queda en casillas del mismo color. Mueve el alfil.",
-      state: ch("4k3/8/8/8/8/8/8/2B1K3 w - - 0 1"),
+      state: ch("4k3/7p/8/8/8/8/8/2B1K3 w - - 0 1"),
       check: (m, b) => pieceMoved(m, b, "b", "el alfil"),
       success: "Diagonal pura. Fíjate: ese alfil solo pisará casillas oscuras toda la partida.",
     },
