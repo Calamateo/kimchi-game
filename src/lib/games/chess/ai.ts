@@ -47,8 +47,17 @@ function orderMoves(moves: CjMove[]) {
   return moves;
 }
 
-function terminal(c: Chess, moves: CjMove[], me: Color, depth: number): number | null {
-  if (moves.length === 0) {
+/**
+ * En los nodos internos usamos la notación SAN (sin `verbose`), que es mucho
+ * más barata: `x` marca captura y `=` coronación. Las capturas van primero.
+ */
+function orderSan(sans: string[]) {
+  const weight = (s: string) => (s.includes("=") ? 2 : 0) + (s.includes("x") ? 1 : 0);
+  return sans.sort((a, b) => weight(b) - weight(a));
+}
+
+function terminal(c: Chess, count: number, me: Color, depth: number): number | null {
+  if (count === 0) {
     if (!c.inCheck()) return 0;
     return c.turn() === me ? -MATE - depth : MATE + depth;
   }
@@ -57,12 +66,12 @@ function terminal(c: Chess, moves: CjMove[], me: Color, depth: number): number |
 
 /** Solo capturas y coronaciones, para estabilizar la evaluación. */
 function quiesce(c: Chess, alpha: number, beta: number, me: Color, pw: boolean, depth: number): number {
-  const moves = c.moves({ verbose: true });
-  const t = terminal(c, moves, me, depth);
+  const sans = c.moves();
+  const t = terminal(c, sans.length, me, depth);
   if (t !== null) return t;
   const stand = evaluate(c, me, pw);
   if (depth === 0) return stand;
-  const tactical = orderMoves(moves.filter((m) => m.captured || m.promotion));
+  const tactical = orderSan(sans.filter((s) => s.includes("x") || s.includes("=")));
   if (tactical.length === 0) return stand;
   const maximizing = c.turn() === me;
   let best = stand;
@@ -85,8 +94,8 @@ function quiesce(c: Chess, alpha: number, beta: number, me: Color, pw: boolean, 
 }
 
 function search(c: Chess, depth: number, alpha: number, beta: number, me: Color, pw: boolean): number {
-  const moves = orderMoves(c.moves({ verbose: true }));
-  const t = terminal(c, moves, me, depth);
+  const moves = orderSan(c.moves());
+  const t = terminal(c, moves.length, me, depth);
   if (t !== null) return t;
   if (c.isInsufficientMaterial()) return 0;
   if (depth === 0) return quiesce(c, alpha, beta, me, pw, 3);
